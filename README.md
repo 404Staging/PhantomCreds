@@ -1,7 +1,9 @@
 
-![Logo](./Media/PhantomCreds_logo.png)
+<img src="./Media/PhantomCreds_logo.png" alt="PhantomCreds Logo" width="150"/>
 
 # PhantomCreds
+
+
 
 Hunt down hidden credentials across file shares — quickly, quietly, and effectively.
 
