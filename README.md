@@ -1,5 +1,5 @@
 
-![Logo](./Media/ChatGPT%20Image%20Apr%2013,%202025,%2005_35_27%20PM.png)
+![Logo](./Media/PhantomCreds_logo.png)
 
 # PhantomCreds
 
