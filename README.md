@@ -1,3 +1,6 @@
+
+![Logo](./Media/ChatGPT%20Image%20Apr%2013,%202025,%2005_35_27%20PM.png)
+
 # PhantomCreds
 
 Hunt down hidden credentials across file shares — quickly, quietly, and effectively.
@@ -36,7 +39,7 @@ PhantomCreds is a lightweight GUI tool that scans file shares for files containi
 
 ### Example UI:
 
-> _A sleek dark GUI will help guide the process intuitively. No command line required._
+![UI](./Media/Screenshots/PhantomCreds_GUI.jpg)
 
 ---
 
