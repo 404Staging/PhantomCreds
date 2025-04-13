@@ -1,2 +1,46 @@
 # PhantomCreds
+
 Hunt down hidden credentials across file shares — quickly, quietly, and effectively.
+
+# Purpose
+
+Credential sprawl is a real threat in enterprise environments. Stray usernames and passwords left in forgotten .txt, .log, or .csv files can expose your organization to unnecessary risk. Whether you’re doing incident response, red team training, or hardening file shares, **PhantomCreds** helps you find the ghosts in your network.
+
+PhantomCreds is a lightweight GUI tool that scans file shares for files containing usernames, patterns that resemble passwords, and suspicious filenames. With a clean interface and exportable results, it's perfect for both security professionals and sysadmins.
+
+# Features
+
+- Dark-themed GUI for comfortable use
+- Scans files for:
+  - Matching usernames from a provided list
+  - Patterns resembling strong passwords
+  - Suspicious filenames (like `user.txt`, `passwords.csv`, etc.)
+- Exports results to `.csv`
+- Displays file metadata like:
+  - Creation date
+  - File owner
+  - Match type (filename, username, password)
+- Supports `.txt`, `.csv`, `.log`, `.conf`, and `.ini` files
+
+# How to Use
+
+1. **Download PhantomCreds.exe** or run the script with `pythonw` to avoid console windows.
+2. Launch the GUI:
+   - `Usernames File`: A `.txt` file containing usernames (one per line).
+   - `Directory to Scan`: The folder (and subfolders) PhantomCreds will recursively search.
+   - `Output File`: Where you want the results exported (`.csv`).
+
+3. Click **Hunt** and let PhantomCreds do its thing.
+
+4. Review results in the message panel or check the exported `.csv` file.
+
+### Example UI:
+
+> _A sleek dark GUI will help guide the process intuitively. No command line required._
+
+---
+
+# Build Notes
+
+This project is designed to be **stealthy**, **lightweight**, and **customizable**.
+
