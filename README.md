@@ -39,6 +39,30 @@ PhantomCreds is a lightweight GUI tool that scans file shares for files containi
 
 4. Review results in the message panel or check the exported `.csv` file.
 
+
+   ### Exporting All Active Directory Users
+
+      1. Login to a domain joined workstation with an account that has access to Active Directory.
+
+      2. Run the following script in powershell
+        - change  ```"$outputFile = "C:\Temp\useraccounts.txt"``` to the location you want to save the information to.
+
+``` # Import AD module (required if not running from AD PowerShell)
+Import-Module ActiveDirectory
+
+# Set the output file path
+$outputFile = "C:\Temp\useraccounts.txt"
+
+# Get all users from the domain and select sAMAccountName
+Get-ADUser -Filter * -Properties sAMAccountName | 
+    Select-Object -ExpandProperty sAMAccountName |
+    Sort-Object |
+    Out-File -FilePath $outputFile -Encoding UTF8
+
+Write-Output "sAMAccountNames saved to $outputFile"
+```
+
+
 ### Example UI:
 
 ![UI](./Media/Screenshots/PhantomCreds_GUI.jpg)
@@ -48,4 +72,8 @@ PhantomCreds is a lightweight GUI tool that scans file shares for files containi
 # Build Notes
 
 This project is designed to be **stealthy**, **lightweight**, and **customizable**.
+
+# Support 
+
+This repository is currently maintained by a single IT. Please consider sponsoring 404Staging to help maintain this project and others.
 
