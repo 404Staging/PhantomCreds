@@ -19,6 +19,7 @@ PhantomCreds is a lightweight GUI tool that scans file shares for files containi
 - Scans files for:
   - Matching usernames from a provided list
   - Patterns resembling strong passwords
+    - 12-26 characters, with 1 uppercase, 1 lowercase, 1 number, and 1 symbol.
   - Suspicious filenames (like `user.txt`, `passwords.csv`, etc.)
 - Exports results to `.csv`
 - Displays file metadata like:
@@ -36,8 +37,10 @@ PhantomCreds is a lightweight GUI tool that scans file shares for files containi
    - `Output File`: Where you want the results exported (`.csv`).
 
 3. Click **Hunt** and let PhantomCreds do its thing.
+  - The UI will display total files scanned every 5 seconds.
 
 4. Review results in the message panel or check the exported `.csv` file.
+    - The total number of scanned files will display at the bottom of the message block when complete.
 
 
    ### Exporting All Active Directory Users
@@ -72,6 +75,7 @@ Write-Output "sAMAccountNames saved to $outputFile"
 # Build Notes
 
 This project is designed to be **stealthy**, **lightweight**, and **customizable**.
+
 
 # Support 
 
