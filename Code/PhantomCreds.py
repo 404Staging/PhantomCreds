@@ -3,6 +3,7 @@ import re
 import csv
 import datetime
 import getpass
+import textract
 import win32security
 import threading
 import time
@@ -10,6 +11,9 @@ from pathlib import Path
 import tkinter as tk
 from tkinter import ttk, filedialog
 import tkinter.font as tkFont
+import docx
+import openpyxl
+import xlrd
 
 # Globals
 stop_flag = threading.Event()
@@ -57,30 +61,30 @@ def get_file_owner(path):
     except Exception:
         return "Unknown"
 
-def log_to_csv_and_gui(file_path, creation_date, owner, filename_match, username_match, password_match, output_csv):
+def log_to_csv_and_gui(file_path, creation_date, owner, filename_match, username_match, password_match, output_csv, message_widget):
     with open(output_csv, 'a', newline='', encoding='utf-8') as csvfile:
         writer = csv.writer(csvfile)
         writer.writerow([file_path, creation_date, owner, filename_match, username_match, password_match])
 
-    message_text.insert(
+    message_widget.insert(
         tk.END,
         f"{file_path} | Created: {creation_date} | Owner: {owner} | "
         f"FilenameMatch: {filename_match} | UsernameMatch: {username_match} | PasswordMatch: {password_match}\n"
     )
-    message_text.see(tk.END)
+    message_widget.see(tk.END)
 
-def update_progress():
+def update_progress(message_widget):
     last_count = -1
     while not stop_flag.is_set():
         if scan_done.is_set():
             break
         if files_checked != last_count:
-            message_text.insert(tk.END, f"Files checked: {files_checked}\n")
-            message_text.see(tk.END)
+            message_widget.insert(tk.END, f"Files checked: {files_checked}\n")
+            message_widget.see(tk.END)
             last_count = files_checked
         time.sleep(5)
 
-def scan_files(directory_to_scan, usernames_file, output_csv):
+def scan_files(directory_to_scan, usernames_file, output_csv, message_widget):
     global files_checked
 
     password_pattern = re.compile(
@@ -91,7 +95,7 @@ def scan_files(directory_to_scan, usernames_file, output_csv):
         with open(usernames_file, 'r', encoding='utf-8') as f:
             usernames = set(line.strip() for line in f if line.strip())
     except FileNotFoundError:
-        message_text.insert(tk.END, f"Usernames file not found: {usernames_file}\n")
+        message_widget.insert(tk.END, f"Usernames file not found: {usernames_file}\n")
         usernames = set()
 
     if not os.path.exists(output_csv):
@@ -111,31 +115,50 @@ def scan_files(directory_to_scan, usernames_file, output_csv):
                 filename_match = any(keyword in lower_name for keyword in ['user', 'username', 'password'])
                 username_match = False
                 password_match = False
+                content = ""
 
-                if filename_match:
-                    log_to_csv_and_gui(full_path, creation_time, owner, True, False, False, output_csv)
-                    continue
+                ext = file.lower().split('.')[-1]
 
-                if file.lower().endswith(('.txt', '.log', '.csv', '.conf', '.ini')):
-                    try:
+                try:
+                    if ext in ['txt', 'log', 'csv', 'conf', 'ini']:
                         with open(full_path, 'r', encoding='utf-8', errors='ignore') as f:
                             content = f.read()
-                            username_match = any(username in content for username in usernames)
-                            password_match = bool(password_pattern.search(content))
-                            if username_match or password_match:
-                                log_to_csv_and_gui(full_path, creation_time, owner, False, username_match, password_match, output_csv)
-                    except Exception as e:
-                        message_text.insert(tk.END, f"Could not read file: {full_path} ({e})\n")
-                        message_text.see(tk.END)
+                    elif ext == 'docx':
+                        doc = docx.Document(full_path)
+                        content = "\n".join([para.text for para in doc.paragraphs])
+                    elif ext == 'xlsx':
+                        wb = openpyxl.load_workbook(full_path, read_only=True)
+                        for sheet in wb.worksheets:
+                            for row in sheet.iter_rows(values_only=True):
+                                content += ' '.join([str(cell) for cell in row if cell]) + '\n'
+                    elif ext == 'xls':
+                        wb = xlrd.open_workbook(full_path)
+                        for sheet in wb.sheets():
+                            for row_idx in range(sheet.nrows):
+                                content += ' '.join([str(cell) for cell in sheet.row_values(row_idx)]) + '\n'
+                    elif ext == 'doc':
+                        content = textract.process(full_path).decode('utf-8')
+
+                    if content:
+                        username_match = any(username in content for username in usernames)
+                        tokens = re.findall(r'\S+', content)
+                        password_match = any(password_pattern.match(token.strip()) for token in tokens)
+
+
+                except Exception as read_error:
+                    message_widget.insert(tk.END, f"Could not read file: {full_path} ({read_error})\n")
+                    message_widget.see(tk.END)
+
+                if filename_match or username_match or password_match:
+                    log_to_csv_and_gui(full_path, creation_time, owner, filename_match, username_match, password_match, output_csv, message_widget)
 
             except Exception as e:
-                message_text.insert(tk.END, f"Error processing file: {full_path} ({e})\n")
-                message_text.see(tk.END)
+                message_widget.insert(tk.END, f"Error processing file: {full_path} ({e})\n")
+                message_widget.see(tk.END)
 
     scan_done.set()
-    message_text.insert(tk.END, f"Hunt complete! Files Scanned: {files_checked}")
-
-    message_text.see(tk.END)
+    message_widget.insert(tk.END, f"Hunt complete! Files Scanned: {files_checked}")
+    message_widget.see(tk.END)
     stop_flag.set()
 
 def threaded_hunt():
@@ -147,17 +170,16 @@ def threaded_hunt():
     output_csv = entry3.get() if entry3.get() != placeholder3 else r"C:\\Temp\\hangingcreds.csv"
 
     stop_flag.clear()
-    t1 = threading.Thread(target=scan_files, args=(directory_to_scan, usernames_file, output_csv), daemon=True)
-    t2 = threading.Thread(target=update_progress, daemon=True)
+    t1 = threading.Thread(target=scan_files, args=(directory_to_scan, usernames_file, output_csv, message_text), daemon=True)
+    t2 = threading.Thread(target=update_progress, args=(message_text,), daemon=True)
     t1.start()
     t2.start()
 
-# GUI 
+
 root = tk.Tk()
 root.title("PhantomCreds")
 custom_font = tkFont.Font(family="Helvetica", size=16, weight="bold")
 
-# Dark Mode Styling
 dark_mode_bg = "#282828"
 dark_mode_fg = "white"
 dark_mode_entry_bg = "#333333"
